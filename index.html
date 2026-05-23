@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+  <title>Báo Cáo Sự Cố IT</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app-container">
+ 
+  <!-- ========== HEADER ========== -->
+  <div class="header">
+    <div class="header-emoji" id="headerLogo">🏢</div>
+    <h3 id="headerCompany">IT School</h3>
+    <p id="headerApp">Báo Cáo Sự Cố IT</p>
+  </div>
+
+  <!-- ========== CARD THIẾT BỊ ========== -->
+  <div id="devCard">
+    <div class="dev-title">✅ Xác nhận thiết bị</div>
+    <div id="infoName" class="dev-name">Đang tải...</div>
+    <div id="infoRoom" class="dev-room">...</div>
+  </div>
+
+  <!-- ========== FORM SCREEN ========== -->
+  <div id="formScreen" class="form-box">
+    <form id="issueForm" onsubmit="handleSubmit(event)">
+     
+      <!-- Mã thiết bị -->
+      <div class="form-group">
+        <label>Mã thiết bị</label>
+        <input 
+          type="text" 
+          class="input-field" 
+          id="idMay" 
+          placeholder="OPS-123..." 
+          required 
+          oninput="checkDeviceDelay(this.value)" 
+          style="font-weight:bold; color:var(--p)">
+        <span id="checkStatus" class="status-text"></span>
+      </div>
+
+      <!-- Người báo cáo -->
+      <div class="form-group">
+        <label>Người báo cáo (Họ và Tên)</label>
+        <input 
+          type="text" 
+          class="input-field" 
+          id="nguoiBao" 
+          placeholder="Nhập tên của bạn..." 
+          required>
+      </div>
+
+      <!-- Mô tả sự cố -->
+      <div class="form-group">
+        <label>Mô tả sự cố (Hoặc chọn nhanh bên dưới)</label>
+       
+        <div class="quick-actions">
+          <div class="q-btn" onclick="addText('💻 Không lên nguồn')">Không lên nguồn</div>
+          <div class="q-btn" onclick="addText('🌐 Mất mạng / Không bắt được Wifi')">Mất mạng</div>
+          <div class="q-btn" onclick="addText('🖨️ Kẹt giấy / Không in được')">Kẹt máy in</div>
+          <div class="q-btn" onclick="addText('🖥️ Màn hình xanh / Đơ máy')">Màn hình xanh</div>
+        </div>
+
+        <textarea 
+          class="input-field" 
+          id="moTa" 
+          rows="3" 
+          placeholder="Ghi chú chi tiết thêm (nếu có)..." 
+          required></textarea>
+      </div>
+
+      <!-- Upload ảnh -->
+      <div class="form-group">
+        <label>Hình ảnh thực tế (Tùy chọn)</label>
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+          <div id="uploadPlaceholder">
+            <svg class="upload-icon" viewBox="0 0 24 24">
+              <path d="M4 4h3l2-2h6l2 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm8 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/>
+            </svg>
+            <div style="font-size:0.85rem; font-weight:600; color:#64748b;">Chạm để chụp hoặc tải ảnh lên</div>
+          </div>
+          <img id="previewImg">
+          <input type="file" id="fileInput" accept="image/*" hidden onchange="handleFileSelect(event)">
+        </div>
+      </div>
+
+      <!-- Nút submit -->
+      <button type="submit" class="btn-submit" id="btnSend">GỬI YÊU CẦU NGAY</button>
+    </form>
+
+    <!-- Danh sách nhân viên trực ban -->
+    <div id="teamBoxContainer"></div>
+   
+    <!-- Thông tin liên hệ -->
+    <div id="contactInfo" style="text-align:center; font-size:0.75rem; font-weight:700; color:var(--p); margin-top:20px;">
+    </div>
+  </div>
+
+  <!-- ========== SUCCESS SCREEN ========== -->
+  <div id="successScreen">
+    <div class="check-circle">
+      <svg class="check-icon" viewBox="0 0 24 24">
+        <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+      </svg>
+    </div>
+    <h2 style="margin-bottom:10px; color:#0f172a">Đã Gửi Thành Công!</h2>
+    <p style="color:#64748b; font-size:0.9rem; margin-bottom:30px">Hệ thống AI đã tiếp nhận và đang điều phối Kỹ thuật viên xử lý.</p>
+    <button class="btn-submit" style="background:#fff; color:var(--p); border:2px solid var(--p);" onclick="handleResetForm()">Gửi phiếu khác</button>
+  </div>
+
+</div>
+
+<!-- Scripts -->
+<script src="config.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
