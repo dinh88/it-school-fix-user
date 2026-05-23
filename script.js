@@ -11,7 +11,22 @@ let devicesCache = [];
 // 📍 PAGE LOAD - KHỞI TẠO
 // =====================================
 
-window.addEventListener('DOMContentLoaded', function() {
+window.addEventListener('DOMContentLoaded', async function() {
+  // Load config
+  try {
+    const config = await fetchConfig();
+    document.getElementById('headerCompany').innerText = config.COMPANY_NAME || 'IT School';
+    document.getElementById('headerApp').innerText = config.APP_NAME || 'Báo Cáo Sự Cố IT';
+    document.getElementById('contactInfo').innerText = config.CONTACT_INFO || '';
+    
+    // Set primary color
+    if (config.PRIMARY_COLOR) {
+      document.documentElement.style.setProperty('--p', config.PRIMARY_COLOR);
+    }
+  } catch (error) {
+    console.warn('⚠️ Không load được config, dùng default');
+  }
+
   // Lấy Device ID từ URL (nếu quét QR)
   const urlParams = new URLSearchParams(window.location.search);
   const deviceIdFromUrl = urlParams.get('id');
@@ -36,14 +51,14 @@ async function loadStaffTeam() {
     if (staffs && staffs.length > 0) {
       let teamHTML = `
         <div class="team-box">
-          <div class="team-title">Đội ngũ kỹ thuật trực ban</div>
+          <div class="team-title">👥 Đội ngũ kỹ thuật trực ban</div>
           <div class="team-list">
       `;
       
       for (let staff of staffs) {
         teamHTML += `
           <div class="tech-item">
-            <img src="${staff['Avatar URL']}" alt="${staff['Staff Name']}">
+            <img src="${staff['Avatar URL']}" alt="${staff['Staff Name']}" onerror="this.src='https://i.pravatar.cc/150?img=0'">
             <div>${staff['Staff Name']}</div>
           </div>
         `;
@@ -68,7 +83,7 @@ async function loadStaffTeam() {
 function addText(text) {
   const ta = document.getElementById('moTa');
   if (ta.value) {
-    ta.value += ', ' + text;
+    ta.value += ' | ' + text;
   } else {
     ta.value = text;
   }
@@ -76,7 +91,7 @@ function addText(text) {
   // Highlight ô text
   ta.style.backgroundColor = '#e0f2fe';
   setTimeout(() => {
-    ta.style.backgroundColor = '#f8fafc';
+    ta.style.backgroundColor = 'white';
   }, 300);
 }
 
@@ -110,17 +125,17 @@ async function checkDevice(id) {
     
     if (result.found) {
       card.style.display = 'block';
-      document.getElementById('infoName').innerText = result.name;
+      document.getElementById('infoName').innerText = '✓ ' + result.name;
       document.getElementById('infoRoom').innerText = '📍 ' + result.room;
-      status.innerHTML = '<span style="color:var(--success)">✓ Hợp lệ</span>';
+      status.innerHTML = '<span style="color:var(--success); font-weight:600;">✓ Hợp lệ</span>';
     } else {
       card.style.display = 'none';
-      status.innerHTML = '<span style="color:#efd044">⚠ Mã máy không tồn tại. Bạn vẫn muốn tiếp tục ghi và gửi</span>';
+      status.innerHTML = '<span style="color:#efd044; font-weight:600;">⚠️ Mã máy không tồn tại (vẫn có thể tiếp tục)</span>';
     }
   } catch (error) {
     console.error('❌ Lỗi check device:', error);
     card.style.display = 'none';
-    status.innerHTML = '<span style="color:#ef4444">❌ Lỗi kết nối</span>';
+    status.innerHTML = '<span style="color:#ef4444;">❌ Lỗi kết nối backend</span>';
   }
 }
 
@@ -160,15 +175,19 @@ function handleFileSelect(e) {
       canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
       
-      // Nén thành JPEG
+      // Nén thành JPEG chất lượng 50%
       const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
       document.getElementById('previewImg').src = dataUrl;
       document.getElementById('previewImg').style.display = 'block';
       document.getElementById('uploadPlaceholder').style.display = 'none';
+      
+      // Lưu base64 (bỏ phần "data:image/jpeg;base64," ở đầu)
       compressedImg = {
         data: dataUrl.split(',')[1],
         type: 'image/jpeg'
       };
+      
+      console.log('✓ Ảnh upload: ' + (compressedImg.data.length / 1024).toFixed(2) + ' KB');
     };
   };
 }
@@ -206,28 +225,37 @@ async function handleSubmit(e) {
   btn.innerText = '⏳ ĐANG GỬI DỮ LIỆU...';
   
   const data = {
-    idMay: document.getElementById('idMay').value,
-    nguoiBao: document.getElementById('nguoiBao').value,
-    moTa: document.getElementById('moTa').value,
-    imageData: compressedImg.data,
-    mimeType: compressedImg.type
+    idMay: document.getElementById('idMay').value.trim(),
+    nguoiBao: document.getElementById('nguoiBao').value.trim(),
+    moTa: document.getElementById('moTa').value.trim(),
+    imageData: compressedImg.data || ''
   };
   
+  if (!data.idMay || !data.nguoiBao || !data.moTa) {
+    alert('Vui lòng điền đầy đủ thông tin (*)');
+    btn.disabled = false;
+    btn.innerText = 'GỬI YÊU CẦU NGAY';
+    return;
+  }
+  
   try {
+    console.log('📨 Gửi báo cáo:', data);
     const result = await saveReport(data);
     
     if (result.success) {
+      // Thành công!
       document.getElementById('formScreen').style.display = 'none';
       document.getElementById('successScreen').style.display = 'block';
       window.scrollTo(0, 0);
     } else {
-      alert('Lỗi: ' + result.msg);
+      // Lỗi từ backend
+      alert('Lỗi: ' + (result.msg || 'Không rõ lỗi'));
       btn.disabled = false;
       btn.innerText = 'GỬI LẠI';
     }
   } catch (error) {
     console.error('❌ Lỗi submit:', error);
-    alert('Lỗi mạng! Vui lòng thử lại.');
+    alert('Lỗi mạng! Vui lòng thử lại.\n\nChi tiết: ' + error.toString());
     btn.disabled = false;
     btn.innerText = 'GỬI LẠI';
   }

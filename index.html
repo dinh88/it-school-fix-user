@@ -19,7 +19,7 @@
   </div>
 
   <!-- ========== CARD THIẾT BỊ ========== -->
-  <div id="devCard">
+  <div id="devCard" style="display:none;">
     <div class="dev-title">✅ Xác nhận thiết bị</div>
     <div id="infoName" class="dev-name">Đang tải...</div>
     <div id="infoRoom" class="dev-room">...</div>
@@ -31,61 +31,39 @@
      
       <!-- Mã thiết bị -->
       <div class="form-group">
-        <label>Mã thiết bị</label>
-        <input 
-          type="text" 
-          class="input-field" 
-          id="idMay" 
-          placeholder="OPS-123..." 
-          required 
-          oninput="checkDeviceDelay(this.value)" 
-          style="font-weight:bold; color:var(--p)">
+        <label for="idMay">Mã Thiết Bị <span style="color:red;">*</span></label>
+        <input type="text" id="idMay" class="input-field" placeholder="VD: OPS-001" required onkeyup="checkDeviceDelay(this.value)">
         <span id="checkStatus" class="status-text"></span>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="quick-actions">
+        <button type="button" class="q-btn" onclick="addText('Không bật được máy')">❌ Không bật được</button>
+        <button type="button" class="q-btn" onclick="addText('Mạng chậm')">🐢 Mạng chậm</button>
+        <button type="button" class="q-btn" onclick="addText('Màn hình đen')">🖥️ Màn hình đen</button>
+        <button type="button" class="q-btn" onclick="addText('Không kết nối wifi')">📡 Không wifi</button>
       </div>
 
       <!-- Người báo cáo -->
       <div class="form-group">
-        <label>Người báo cáo (Họ và Tên)</label>
-        <input 
-          type="text" 
-          class="input-field" 
-          id="nguoiBao" 
-          placeholder="Nhập tên của bạn..." 
-          required>
+        <label for="nguoiBao">Người Báo Cáo <span style="color:red;">*</span></label>
+        <input type="text" id="nguoiBao" class="input-field" placeholder="Nhập tên của bạn" required>
       </div>
 
       <!-- Mô tả sự cố -->
       <div class="form-group">
-        <label>Mô tả sự cố (Hoặc chọn nhanh bên dưới)</label>
-       
-        <div class="quick-actions">
-          <div class="q-btn" onclick="addText('💻 Không lên nguồn')">Không lên nguồn</div>
-          <div class="q-btn" onclick="addText('🌐 Mất mạng / Không bắt được Wifi')">Mất mạng</div>
-          <div class="q-btn" onclick="addText('🖨️ Kẹt giấy / Không in được')">Kẹt máy in</div>
-          <div class="q-btn" onclick="addText('🖥️ Màn hình xanh / Đơ máy')">Màn hình xanh</div>
-        </div>
-
-        <textarea 
-          class="input-field" 
-          id="moTa" 
-          rows="3" 
-          placeholder="Ghi chú chi tiết thêm (nếu có)..." 
-          required></textarea>
+        <label for="moTa">Mô Tả Sự Cố <span style="color:red;">*</span></label>
+        <textarea id="moTa" class="input-field" placeholder="Mô tả chi tiết vấn đề..." required></textarea>
       </div>
 
       <!-- Upload ảnh -->
       <div class="form-group">
-        <label>Hình ảnh thực tế (Tùy chọn)</label>
+        <label>Hình Ảnh (Tùy Chọn)</label>
         <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-          <div id="uploadPlaceholder">
-            <svg class="upload-icon" viewBox="0 0 24 24">
-              <path d="M4 4h3l2-2h6l2 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm8 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/>
-            </svg>
-            <div style="font-size:0.85rem; font-weight:600; color:#64748b;">Chạm để chụp hoặc tải ảnh lên</div>
-          </div>
-          <img id="previewImg">
-          <input type="file" id="fileInput" accept="image/*" hidden onchange="handleFileSelect(event)">
+          <div id="uploadPlaceholder">📸 Chạm để chọn ảnh</div>
+          <img id="previewImg" style="display:none; max-width:100%; border-radius:8px;">
         </div>
+        <input type="file" id="fileInput" style="display:none;" accept="image/*" onchange="handleFileSelect(event)">
       </div>
 
       <!-- Nút submit -->
@@ -101,10 +79,10 @@
   </div>
 
   <!-- ========== SUCCESS SCREEN ========== -->
-  <div id="successScreen">
+  <div id="successScreen" style="display:none;">
     <div class="check-circle">
-      <svg class="check-icon" viewBox="0 0 24 24">
-        <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+      <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+        <path d="M20 6L9 17l-5-5"></path>
       </svg>
     </div>
     <h2 style="margin-bottom:10px; color:#0f172a">Đã Gửi Thành Công!</h2>
