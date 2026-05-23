@@ -1,22 +1,21 @@
 /**
- * 🔧 GOOGLE APPS SCRIPT - BACKEND (Updated)
+ * 🔧 GOOGLE APPS SCRIPT - BACKEND (HOÀN CHỈNH)
  * Lưu code này vào Google Apps Script Editor của Google Sheet
  * 
  * Steps:
- * 1. Mở Google Sheet của bạn
+ * 1. Mở Google Sheet: https://docs.google.com/spreadsheets/d/1h7SWX4iIiOUOFCEtMGryaMYYPKktA9DkNsy_du4Pi78
  * 2. Tools → Script Editor
- * 3. Copy-paste code này
- * 4. Deploy as Web App:
- *    - Execute as: Bạn
- *    - Who has access: Anyone
- * 5. Copy Deployment URL vào config.js
+ * 3. Copy-paste code này (xóa code cũ)
+ * 4. Deploy: New deployment → Web app → Execute as: Me → Who has access: Anyone
+ * 5. Copy URL → dán vào config.js (GOOGLE_SCRIPT_URL)
  */
 
-const SHEET_ID = '1jQUiXw2LrmSGYvS7OtscIfwe6sOYt-1dwf05a77scjk';
+const SHEET_ID = '1h7SWX4iIiOUOFCEtMGryaMYYPKktA9DkNsy_du4Pi78';
 const CONFIG_SHEET = 'Config';
 const DEVICES_SHEET = 'Devices';
 const STAFFS_SHEET = 'Staffs';
 const REPORT_SHEET = 'Reports';
+const FOLDER_NAME = 'IT-School-Reports';
 
 // =====================================
 // 🎯 HANDLE POST REQUESTS
@@ -28,21 +27,23 @@ function doPost(e) {
     const action = data.action;
     
     if (action === 'getConfig') {
-      return getConfig();
+      return respond(true, 'Thành công', getConfig());
     } else if (action === 'getDevices') {
-      return getDevices();
+      return respond(true, 'Thành công', getDevices());
     } else if (action === 'getStaffs') {
-      return getStaffs();
-    } else if (action === 'saveReport') {
-      return saveReport(data.data);
+      return respond(true, 'Thành công', getStaffs());
     } else if (action === 'getDeviceInfo') {
-      return getDeviceInfo(data.id);
+      const deviceId = data.deviceId;
+      return respond(true, 'Thành công', getDeviceInfo(deviceId));
+    } else if (action === 'saveReport') {
+      const reportData = data.data;
+      const result = saveReport(reportData);
+      return respond(result.success, result.msg, result.data);
+    } else {
+      return respond(false, 'Action không tồn tại');
     }
-    
-    return respond(false, 'Action không tồn tại');
   } catch (error) {
-    Logger.log('Error: ' + error);
-    return respond(false, error.toString());
+    return respond(false, 'Lỗi server: ' + error.toString());
   }
 }
 
@@ -52,10 +53,21 @@ function doPost(e) {
 
 function getConfig() {
   try {
-    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(CONFIG_SHEET);
-    const data = sheet.getDataRange().getValues();
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const sheet = ss.getSheetByName(CONFIG_SHEET);
     
+    if (!sheet) {
+      return {
+        'APP_NAME': 'Báo Cáo Sự Cố IT',
+        'COMPANY_NAME': 'IT School',
+        'PRIMARY_COLOR': '#0d6efd',
+        'CONTACT_INFO': '📞 Hotline: 0865 123 456'
+      };
+    }
+    
+    const data = sheet.getDataRange().getValues();
     const config = {};
+    
     for (let i = 1; i < data.length; i++) {
       const key = data[i][0];
       const value = data[i][1];
@@ -64,11 +76,10 @@ function getConfig() {
       }
     }
     
-    return ContentService.createTextOutput(JSON.stringify(config))
-      .setMimeType(ContentService.MimeType.JSON);
+    return config;
   } catch (error) {
-    Logger.log('Config error: ' + error);
-    return respond(false, 'Lỗi lấy config: ' + error.toString());
+    Logger.log('❌ Lỗi getConfig:', error);
+    return {};
   }
 }
 
@@ -78,23 +89,29 @@ function getConfig() {
 
 function getDevices() {
   try {
-    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(DEVICES_SHEET);
-    const data = sheet.getDataRange().getValues();
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const sheet = ss.getSheetByName(DEVICES_SHEET);
     
+    if (!sheet) return [];
+    
+    const data = sheet.getDataRange().getValues();
     const devices = [];
+    const headers = data[0];
+    
     for (let i = 1; i < data.length; i++) {
-      devices.push({
-        'Device ID': data[i][0],
-        'Device Name': data[i][1],
-        'Room': data[i][2]
-      });
+      const device = {};
+      for (let j = 0; j < headers.length; j++) {
+        device[headers[j]] = data[i][j];
+      }
+      if (device['Device ID']) {
+        devices.push(device);
+      }
     }
     
-    return ContentService.createTextOutput(JSON.stringify(devices))
-      .setMimeType(ContentService.MimeType.JSON);
+    return devices;
   } catch (error) {
-    Logger.log('Devices error: ' + error);
-    return respond(false, 'Lỗi lấy devices: ' + error.toString());
+    Logger.log('❌ Lỗi getDevices:', error);
+    return [];
   }
 }
 
@@ -104,94 +121,29 @@ function getDevices() {
 
 function getStaffs() {
   try {
-    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(STAFFS_SHEET);
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const sheet = ss.getSheetByName(STAFFS_SHEET);
+    
+    if (!sheet) return [];
+    
     const data = sheet.getDataRange().getValues();
-    
     const staffs = [];
+    const headers = data[0];
+    
     for (let i = 1; i < data.length; i++) {
-      staffs.push({
-        'Staff Name': data[i][0],
-        'Avatar URL': data[i][1],
-        'Status': data[i][2]
-      });
+      const staff = {};
+      for (let j = 0; j < headers.length; j++) {
+        staff[headers[j]] = data[i][j];
+      }
+      if (staff['Staff Name']) {
+        staffs.push(staff);
+      }
     }
     
-    return ContentService.createTextOutput(JSON.stringify(staffs))
-      .setMimeType(ContentService.MimeType.JSON);
+    return staffs;
   } catch (error) {
-    Logger.log('Staffs error: ' + error);
-    return respond(false, 'Lỗi lấy staffs: ' + error.toString());
-  }
-}
-
-// =====================================
-// ✅ SAVE REPORT
-// =====================================
-
-function saveReport(reportData) {
-  try {
-    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(REPORT_SHEET);
-    
-    // Kiểm tra header
-    const firstRow = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    if (firstRow[0] !== 'Timestamp') {
-      sheet.insertRows(1);
-      sheet.getRange(1, 1, 1, 6).setValues([['Timestamp', 'Device ID', 'Reporter Name', 'Description', 'Status', 'Image']]);
-    }
-    
-    // Thêm dòng mới
-    const newRow = [
-      new Date().toLocaleString('vi-VN'),
-      reportData.idMay || '',
-      reportData.nguoiBao || '',
-      reportData.moTa || '',
-      'Pending',
-      reportData.imageData ? 'Có ảnh' : 'Không'
-    ];
-    
-    sheet.appendRow(newRow);
-    
-    // Nếu có ảnh, lưu vào Drive
-    if (reportData.imageData) {
-      saveImageToDrive(reportData.imageData, reportData.idMay, reportData.nguoiBao);
-    }
-    
-    return respond(true, 'Báo cáo đã được lưu thành công');
-  } catch (error) {
-    Logger.log('Save Error: ' + error);
-    return respond(false, 'Lỗi khi lưu: ' + error.toString());
-  }
-}
-
-// =====================================
-// 🖼️ SAVE IMAGE TO DRIVE
-// =====================================
-
-function saveImageToDrive(base64Data, deviceId, reporterName) {
-  try {
-    const folder = DriveApp.getFoldersByName('IT-School-Reports').next();
-    
-    const blob = Utilities.newBlob(
-      Utilities.base64DecodeWebSafe(base64Data),
-      'image/jpeg',
-      `Report_${deviceId}_${reporterName}_${Date.now()}.jpg`
-    );
-    
-    folder.createFile(blob);
-  } catch (error) {
-    Logger.log('Image save error: ' + error);
-    // Tạo folder nếu chưa có
-    try {
-      const folder = DriveApp.createFolder('IT-School-Reports');
-      const blob = Utilities.newBlob(
-        Utilities.base64DecodeWebSafe(base64Data),
-        'image/jpeg',
-        `Report_${deviceId}_${reporterName}_${Date.now()}.jpg`
-      );
-      folder.createFile(blob);
-    } catch (err) {
-      Logger.log('Create folder error: ' + err);
-    }
+    Logger.log('❌ Lỗi getStaffs:', error);
+    return [];
   }
 }
 
@@ -201,27 +153,113 @@ function saveImageToDrive(base64Data, deviceId, reporterName) {
 
 function getDeviceInfo(deviceId) {
   try {
-    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(DEVICES_SHEET);
-    const data = sheet.getDataRange().getValues();
+    const devices = getDevices();
+    const device = devices.find(d => 
+      d['Device ID'] && d['Device ID'].toString().toUpperCase() === deviceId.toUpperCase()
+    );
     
-    for (let i = 1; i < data.length; i++) {
-      if (data[i][0] === deviceId) {
-        return ContentService.createTextOutput(JSON.stringify({
-          found: true,
-          name: data[i][1],
-          room: data[i][2]
-        })).setMimeType(ContentService.MimeType.JSON);
+    if (device) {
+      return {
+        found: true,
+        name: device['Device Name'] || 'N/A',
+        room: device['Room'] || 'N/A'
+      };
+    } else {
+      return {
+        found: false,
+        name: 'N/A',
+        room: 'N/A'
+      };
+    }
+  } catch (error) {
+    Logger.log('❌ Lỗi getDeviceInfo:', error);
+    return { found: false, name: 'N/A', room: 'N/A' };
+  }
+}
+
+// =====================================
+// ✅ SAVE REPORT
+// =====================================
+
+function saveReport(reportData) {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const sheet = ss.getSheetByName(REPORT_SHEET);
+    
+    if (!sheet) {
+      return { success: false, msg: 'Sheet Reports không tồn tại' };
+    }
+    
+    // Chuẩn bị dữ liệu
+    const timestamp = new Date();
+    const imageUrl = '';
+    
+    // Nếu có ảnh, lưu vào Drive
+    let imageLink = '';
+    if (reportData.imageData && reportData.imageData.trim()) {
+      const imageResult = saveImageToDrive(reportData.imageData, reportData.idMay, reportData.nguoiBao);
+      if (imageResult.success) {
+        imageLink = imageResult.url;
       }
     }
     
-    return ContentService.createTextOutput(JSON.stringify({
-      found: false
-    })).setMimeType(ContentService.MimeType.JSON);
+    // Thêm dòng vào sheet
+    const newRow = [
+      timestamp,
+      reportData.idMay,
+      reportData.nguoiBao,
+      reportData.moTa,
+      imageLink,
+      'Chưa xử lý'
+    ];
+    
+    sheet.appendRow(newRow);
+    
+    return {
+      success: true,
+      msg: 'Báo cáo đã được lưu thành công',
+      data: { timestamp: timestamp.toString(), imageUrl: imageLink }
+    };
   } catch (error) {
-    Logger.log('Device info error: ' + error);
-    return ContentService.createTextOutput(JSON.stringify({
-      found: false
-    })).setMimeType(ContentService.MimeType.JSON);
+    Logger.log('❌ Lỗi saveReport:', error);
+    return { success: false, msg: 'Lỗi lưu báo cáo: ' + error.toString() };
+  }
+}
+
+// =====================================
+// 🖼️ SAVE IMAGE TO DRIVE
+// =====================================
+
+function saveImageToDrive(base64Data, deviceId, reporterName) {
+  try {
+    // Tạo/lấy folder
+    let folder = null;
+    const folders = DriveApp.getFoldersByName(FOLDER_NAME);
+    
+    if (folders.hasNext()) {
+      folder = folders.next();
+    } else {
+      folder = DriveApp.createFolder(FOLDER_NAME);
+    }
+    
+    // Decode base64 → Blob
+    const bytes = Utilities.newBlob(Utilities.base64Decode(base64Data)).getBytes();
+    const blob = Utilities.newBlob(bytes, 'image/jpeg');
+    
+    // Tên file: deviceId_reporterName_timestamp
+    const timestamp = new Date().getTime();
+    const fileName = deviceId + '_' + reporterName.replace(/\s+/g, '_') + '_' + timestamp + '.jpg';
+    
+    // Lưu file
+    const file = folder.createFile(blob).setName(fileName);
+    
+    return {
+      success: true,
+      url: file.getUrl()
+    };
+  } catch (error) {
+    Logger.log('❌ Lỗi saveImageToDrive:', error);
+    return { success: false, url: '' };
   }
 }
 
@@ -229,11 +267,13 @@ function getDeviceInfo(deviceId) {
 // 🔄 RESPONSE HELPER
 // =====================================
 
-function respond(success, msg) {
+function respond(success, msg, data) {
   const response = {
     success: success,
-    msg: msg
+    msg: msg,
+    data: data || {}
   };
+  
   return ContentService.createTextOutput(JSON.stringify(response))
     .setMimeType(ContentService.MimeType.JSON);
 }
@@ -243,7 +283,15 @@ function respond(success, msg) {
 // =====================================
 
 function test() {
-  Logger.log('Config:', getConfig());
-  Logger.log('Devices:', getDevices());
-  Logger.log('Staffs:', getStaffs());
+  Logger.log('=== CONFIG ===');
+  Logger.log(getConfig());
+  
+  Logger.log('=== DEVICES ===');
+  Logger.log(getDevices());
+  
+  Logger.log('=== STAFFS ===');
+  Logger.log(getStaffs());
+  
+  Logger.log('=== TEST DEVICE INFO ===');
+  Logger.log(getDeviceInfo('OPS-001'));
 }
