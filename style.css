@@ -1,0 +1,330 @@
+/* 🎨 TOÀN BỘ CSS - KHÔNG CẦN BOOTSTRAP */
+
+:root {
+  --p: #0d6efd;
+  --bg: #f4f7f6;
+  --text: #1e293b;
+  --border: #e2e8f0;
+  --success: #10b981;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+}
+
+.app-container {
+  width: 100%;
+  max-width: 480px;
+  background: #ffffff;
+  min-height: 100vh;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+/* ========== HEADER ========== */
+.header {
+  background: var(--p);
+  color: white;
+  padding: 30px 20px;
+  text-align: center;
+  border-radius: 0 0 24px 24px;
+  margin-bottom: 25px;
+}
+
+.header-logo {
+  max-width: 120px;
+  max-height: 70px;
+  margin-bottom: 10px;
+  filter: drop-shadow(0 4px 4px rgba(0,0,0,0.2));
+}
+
+.header-emoji {
+  font-size: 3rem;
+}
+
+.header h3 {
+  font-size: 1.3rem;
+  margin-bottom: 5px;
+  font-weight: 700;
+}
+
+.header p {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+/* ========== CARD THIẾT BỊ ========== */
+#devCard {
+  display: none;
+  margin: -40px 20px 20px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--success);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  animation: fadeDown 0.3s ease;
+}
+
+.dev-title {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.dev-name {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.dev-room {
+  display: inline-block;
+  background: #ecfdf5;
+  color: var(--success);
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* ========== FORM ELEMENTS ========== */
+.form-box {
+  padding: 0 20px 30px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 1rem;
+  background: #f8fafc;
+  outline: none;
+  transition: 0.2s;
+  color: var(--text);
+}
+
+.input-field:focus {
+  border-color: var(--p);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+}
+
+.status-text {
+  font-size: 0.8rem;
+  margin-top: 6px;
+  font-style: italic;
+  color: #64748b;
+  display: block;
+}
+
+/* ========== NÚT CHỌN NHANH ========== */
+.quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.q-btn {
+  background: #f1f5f9;
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: 0.1s;
+  user-select: none;
+}
+
+.q-btn:active {
+  transform: scale(0.95);
+  background: var(--p);
+  color: #fff;
+  border-color: var(--p);
+}
+
+/* ========== UPLOAD ẢNH ========== */
+.upload-area {
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 25px;
+  text-align: center;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.upload-area:hover {
+  border-color: var(--p);
+  background: #f0f6ff;
+}
+
+.upload-icon {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 10px;
+  fill: #94a3b8;
+}
+
+#previewImg {
+  display: none;
+  width: 100%;
+  border-radius: 8px;
+  margin-top: 10px;
+  max-height: 250px;
+  object-fit: cover;
+}
+
+/* ========== NÚT SUBMIT ========== */
+.btn-submit {
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 1rem;
+  background: var(--p);
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(13, 110, 253, 0.2);
+  transition: 0.2s;
+}
+
+.btn-submit:active {
+  transform: scale(0.98);
+}
+
+.btn-submit:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* ========== MÀN HÌNH THÀNH CÔNG ========== */
+#successScreen {
+  display: none;
+  text-align: center;
+  padding: 50px 20px;
+  animation: fadeIn 0.4s;
+}
+
+.check-circle {
+  width: 70px;
+  height: 70px;
+  background: #d1fae5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.check-icon {
+  width: 35px;
+  height: 35px;
+  fill: var(--success);
+}
+
+/* ========== ĐỘI NGŨ KTV ========== */
+.team-box {
+  background: #f8fafc;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 15px;
+  margin-top: 20px;
+  text-align: center;
+}
+
+.team-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--p);
+  margin-bottom: 15px;
+  text-transform: uppercase;
+}
+
+.team-list {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.tech-item img {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: 2px solid var(--p);
+  object-fit: cover;
+}
+
+.tech-item div {
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-top: 5px;
+  color: #475569;
+}
+
+/* ========== ANIMATIONS ========== */
+@keyframes fadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 480px) {
+  .app-container {
+    max-width: 100%;
+  }
+  
+  .header {
+    padding: 20px 15px;
+  }
+  
+  .form-box {
+    padding: 0 15px 20px;
+  }
+}
