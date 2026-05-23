@@ -14,16 +14,25 @@ const CONFIG = {
   // ========== CHỌN MODE ==========
   USE_MOCK_DATA: true, // ← Bật để test không cần Google Sheet
   
-  // ========== GIAO DIỆN ==========
+  // ========== GIAO DIỆN (Default - sẽ được override từ Sheet) ==========
   APP_NAME: 'Báo Cáo Sự Cố IT',
   COMPANY_NAME: 'IT School',
   LOGO_URL: null, // Để null thì hiển thị emoji 🏢
+  PRIMARY_COLOR: '#0d6efd',
   CONTACT_INFO: '📞 Hotline: 0865 123 456 | Email: support@itschool.vn'
 };
 
 // =====================================
 // 📊 MOCK DATA - TEST KHÔNG CẦN BACKEND
 // =====================================
+
+const MOCK_CONFIG = {
+  'APP_NAME': 'HỆ THỐNG BÁO HỒNG',
+  'COMPANY_NAME': 'DTP_SCHOOLING',
+  'LOGO_URL': 'https://i.pravatar.cc/150?img=50',
+  'PRIMARY_COLOR': '#4db8d8',
+  'CONTACT_INFO': 'Hotline: 0932.466.533'
+};
 
 const MOCK_DEVICES = [
   { 'Device ID': 'OPS-001', 'Device Name': 'Dell Laptop', 'Room': 'Phòng IT' },
@@ -34,25 +43,59 @@ const MOCK_DEVICES = [
 
 const MOCK_STAFFS = [
   {
-    'Staff Name': 'Nguyễn Văn A',
+    'Staff Name': 'SONG THIÊN',
     'Avatar URL': 'https://i.pravatar.cc/150?img=1',
     'Status': 'on-duty'
   },
   {
-    'Staff Name': 'Trần Thị B',
+    'Staff Name': 'HOÀI KHANH',
     'Avatar URL': 'https://i.pravatar.cc/150?img=2',
     'Status': 'on-duty'
   },
   {
-    'Staff Name': 'Phạm Minh C',
+    'Staff Name': 'PHỈ TRUNG',
     'Avatar URL': 'https://i.pravatar.cc/150?img=3',
-    'Status': 'off-duty'
+    'Status': 'on-duty'
+  },
+  {
+    'Staff Name': 'THẠNH PHONG',
+    'Avatar URL': 'https://i.pravatar.cc/150?img=4',
+    'Status': 'on-duty'
+  },
+  {
+    'Staff Name': 'MINH TỮ',
+    'Avatar URL': 'https://i.pravatar.cc/150?img=5',
+    'Status': 'on-duty'
   }
 ];
 
 // =====================================
 // 🔄 API CALLS - FETCH DATA
 // =====================================
+
+/**
+ * Lấy config từ Google Sheet
+ */
+async function fetchConfig() {
+  if (CONFIG.USE_MOCK_DATA) {
+    return MOCK_CONFIG;
+  }
+  
+  try {
+    const response = await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'getConfig' }),
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    const data = await response.json();
+    // Merge với default config
+    return { ...CONFIG, ...data };
+  } catch (error) {
+    console.error('❌ Lỗi fetch config:', error);
+    return MOCK_CONFIG; // Fallback
+  }
+}
 
 /**
  * Lấy danh sách thiết bị
@@ -161,19 +204,27 @@ async function saveReport(data) {
 // 🎨 LOAD CONFIG VÀO UI
 // =====================================
 
-document.addEventListener('DOMContentLoaded', function() {
-  // Update header
-  document.getElementById('headerApp').textContent = CONFIG.APP_NAME;
-  document.getElementById('headerCompany').textContent = CONFIG.COMPANY_NAME;
+document.addEventListener('DOMContentLoaded', async function() {
+  // Fetch config từ Sheet
+  const appConfig = await fetchConfig();
   
-  if (CONFIG.LOGO_URL) {
+  // Update CSS variables
+  if (appConfig.PRIMARY_COLOR) {
+    document.documentElement.style.setProperty('--p', appConfig.PRIMARY_COLOR);
+  }
+  
+  // Update header
+  document.getElementById('headerApp').textContent = appConfig.APP_NAME || CONFIG.APP_NAME;
+  document.getElementById('headerCompany').textContent = appConfig.COMPANY_NAME || CONFIG.COMPANY_NAME;
+  
+  if (appConfig.LOGO_URL) {
     const img = document.createElement('img');
-    img.src = CONFIG.LOGO_URL;
+    img.src = appConfig.LOGO_URL;
     img.className = 'header-logo';
     document.getElementById('headerLogo').innerHTML = '';
     document.getElementById('headerLogo').appendChild(img);
   }
   
   // Update contact info
-  document.getElementById('contactInfo').textContent = CONFIG.CONTACT_INFO;
+  document.getElementById('contactInfo').textContent = appConfig.CONTACT_INFO || CONFIG.CONTACT_INFO;
 });
