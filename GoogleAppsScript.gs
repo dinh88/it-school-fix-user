@@ -1,5 +1,5 @@
 /**
- * 🔧 GOOGLE APPS SCRIPT - BACKEND
+ * 🔧 GOOGLE APPS SCRIPT - BACKEND (Updated)
  * Lưu code này vào Google Apps Script Editor của Google Sheet
  * 
  * Steps:
@@ -13,6 +13,7 @@
  */
 
 const SHEET_ID = '1jQUiXw2LrmSGYvS7OtscIfwe6sOYt-1dwf05a77scjk';
+const CONFIG_SHEET = 'Config';
 const DEVICES_SHEET = 'Devices';
 const STAFFS_SHEET = 'Staffs';
 const REPORT_SHEET = 'Reports';
@@ -26,7 +27,9 @@ function doPost(e) {
     const data = JSON.parse(e.postData.contents);
     const action = data.action;
     
-    if (action === 'getDevices') {
+    if (action === 'getConfig') {
+      return getConfig();
+    } else if (action === 'getDevices') {
       return getDevices();
     } else if (action === 'getStaffs') {
       return getStaffs();
@@ -44,24 +47,55 @@ function doPost(e) {
 }
 
 // =====================================
+// ⚙️ GET CONFIG
+// =====================================
+
+function getConfig() {
+  try {
+    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(CONFIG_SHEET);
+    const data = sheet.getDataRange().getValues();
+    
+    const config = {};
+    for (let i = 1; i < data.length; i++) {
+      const key = data[i][0];
+      const value = data[i][1];
+      if (key) {
+        config[key] = value;
+      }
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify(config))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    Logger.log('Config error: ' + error);
+    return respond(false, 'Lỗi lấy config: ' + error.toString());
+  }
+}
+
+// =====================================
 // 📊 GET DEVICES
 // =====================================
 
 function getDevices() {
-  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(DEVICES_SHEET);
-  const data = sheet.getDataRange().getValues();
-  
-  const devices = [];
-  for (let i = 1; i < data.length; i++) {
-    devices.push({
-      'Device ID': data[i][0],
-      'Device Name': data[i][1],
-      'Room': data[i][2]
-    });
+  try {
+    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(DEVICES_SHEET);
+    const data = sheet.getDataRange().getValues();
+    
+    const devices = [];
+    for (let i = 1; i < data.length; i++) {
+      devices.push({
+        'Device ID': data[i][0],
+        'Device Name': data[i][1],
+        'Room': data[i][2]
+      });
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify(devices))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    Logger.log('Devices error: ' + error);
+    return respond(false, 'Lỗi lấy devices: ' + error.toString());
   }
-  
-  return ContentService.createTextOutput(JSON.stringify(devices))
-    .setMimeType(ContentService.MimeType.JSON);
 }
 
 // =====================================
@@ -69,20 +103,25 @@ function getDevices() {
 // =====================================
 
 function getStaffs() {
-  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(STAFFS_SHEET);
-  const data = sheet.getDataRange().getValues();
-  
-  const staffs = [];
-  for (let i = 1; i < data.length; i++) {
-    staffs.push({
-      'Staff Name': data[i][0],
-      'Avatar URL': data[i][1],
-      'Status': data[i][2]
-    });
+  try {
+    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(STAFFS_SHEET);
+    const data = sheet.getDataRange().getValues();
+    
+    const staffs = [];
+    for (let i = 1; i < data.length; i++) {
+      staffs.push({
+        'Staff Name': data[i][0],
+        'Avatar URL': data[i][1],
+        'Status': data[i][2]
+      });
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify(staffs))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    Logger.log('Staffs error: ' + error);
+    return respond(false, 'Lỗi lấy staffs: ' + error.toString());
   }
-  
-  return ContentService.createTextOutput(JSON.stringify(staffs))
-    .setMimeType(ContentService.MimeType.JSON);
 }
 
 // =====================================
@@ -142,13 +181,17 @@ function saveImageToDrive(base64Data, deviceId, reporterName) {
   } catch (error) {
     Logger.log('Image save error: ' + error);
     // Tạo folder nếu chưa có
-    const folder = DriveApp.createFolder('IT-School-Reports');
-    const blob = Utilities.newBlob(
-      Utilities.base64DecodeWebSafe(base64Data),
-      'image/jpeg',
-      `Report_${deviceId}_${reporterName}_${Date.now()}.jpg`
-    );
-    folder.createFile(blob);
+    try {
+      const folder = DriveApp.createFolder('IT-School-Reports');
+      const blob = Utilities.newBlob(
+        Utilities.base64DecodeWebSafe(base64Data),
+        'image/jpeg',
+        `Report_${deviceId}_${reporterName}_${Date.now()}.jpg`
+      );
+      folder.createFile(blob);
+    } catch (err) {
+      Logger.log('Create folder error: ' + err);
+    }
   }
 }
 
@@ -157,22 +200,29 @@ function saveImageToDrive(base64Data, deviceId, reporterName) {
 // =====================================
 
 function getDeviceInfo(deviceId) {
-  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(DEVICES_SHEET);
-  const data = sheet.getDataRange().getValues();
-  
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][0] === deviceId) {
-      return ContentService.createTextOutput(JSON.stringify({
-        found: true,
-        name: data[i][1],
-        room: data[i][2]
-      })).setMimeType(ContentService.MimeType.JSON);
+  try {
+    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(DEVICES_SHEET);
+    const data = sheet.getDataRange().getValues();
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === deviceId) {
+        return ContentService.createTextOutput(JSON.stringify({
+          found: true,
+          name: data[i][1],
+          room: data[i][2]
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
     }
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      found: false
+    })).setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    Logger.log('Device info error: ' + error);
+    return ContentService.createTextOutput(JSON.stringify({
+      found: false
+    })).setMimeType(ContentService.MimeType.JSON);
   }
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    found: false
-  })).setMimeType(ContentService.MimeType.JSON);
 }
 
 // =====================================
@@ -193,6 +243,7 @@ function respond(success, msg) {
 // =====================================
 
 function test() {
-  Logger.log(getDevices());
-  Logger.log(getStaffs());
+  Logger.log('Config:', getConfig());
+  Logger.log('Devices:', getDevices());
+  Logger.log('Staffs:', getStaffs());
 }
